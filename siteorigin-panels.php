@@ -32,6 +32,7 @@ require_once plugin_dir_path(__FILE__) . 'inc/widgets.php';
 require_once plugin_dir_path(__FILE__) . 'inc/plugin-activation.php';
 require_once plugin_dir_path(__FILE__) . 'inc/admin-actions.php';
 require_once plugin_dir_path(__FILE__) . 'inc/sidebars-emulator.php';
+require_once plugin_dir_path(__FILE__) . 'inc/live-editor.php';
 
 if( defined('SITEORIGIN_PANELS_DEV') && SITEORIGIN_PANELS_DEV ) include plugin_dir_path(__FILE__).'inc/debug.php';
 
@@ -260,7 +261,6 @@ function siteorigin_panels_admin_enqueue_scripts( $prefix = '', $force = false )
 		if( $screen->base != 'widgets' && $screen->base != 'customize' ) {
 			// We don't use the history browser and live editor in the widgets interface
 			wp_enqueue_script( 'so-panels-admin-history', plugin_dir_url(__FILE__) . 'js/siteorigin-panels-history' . SITEORIGIN_PANELS_JS_SUFFIX . '.js', array( 'so-panels-admin', 'jquery', 'underscore', 'backbone' ), SITEORIGIN_PANELS_VERSION, true );
-			wp_enqueue_script( 'so-panels-admin-live-editor', plugin_dir_url(__FILE__) . 'js/siteorigin-panels-live-editor' . SITEORIGIN_PANELS_JS_SUFFIX . '.js', array( 'so-panels-admin', 'jquery', 'underscore', 'backbone' ), SITEORIGIN_PANELS_VERSION, true );
 		}
 
 		add_action( 'admin_footer', 'siteorigin_panels_js_templates' );
@@ -1009,12 +1009,14 @@ function siteorigin_panels_render( $post_id = false, $enqueue_css = true, $panel
 			$cell_style_wrapper = siteorigin_panels_start_style_wrapper( 'cell', array(), !empty($panels_data['grids'][$gi]['style']) ? $panels_data['grids'][$gi]['style'] : array() );
 			if( !empty($cell_style_wrapper) ) echo $cell_style_wrapper;
 
+			ob_start();
 			foreach ( $widgets as $pi => $widget_info ) {
 				// TODO this wrapper should go in the before/after widget arguments
 				$widget_style_wrapper = siteorigin_panels_start_style_wrapper( 'widget', array(), !empty( $widget_info['panels_info']['style'] ) ? $widget_info['panels_info']['style'] : array() );
 				siteorigin_panels_the_widget( $widget_info['panels_info'], $widget_info, $gi, $ci, $pi, $pi == 0, $pi == count( $widgets ) - 1, $post_id, $widget_style_wrapper );
 			}
 			if ( empty( $widgets ) ) echo '&nbsp;';
+			echo apply_filters( 'siteorigin_panels_cell_html', ob_get_clean(), $panels_data, $post_id, $widgets, $gi, $ci );
 
 			if( !empty($cell_style_wrapper) ) echo '</div>';
 			echo '</div>';
@@ -1411,6 +1413,3 @@ function siteorigin_panels_process_panels_data( $panels_data ){
 	return $panels_data;
 }
 add_filter( 'siteorigin_panels_data', 'siteorigin_panels_process_panels_data', 5 );
-
-// Include the live editor file if we're in live editor mode.
-if( !empty($_GET['siteorigin_panels_live_editor']) ) require_once plugin_dir_path(__FILE__) . 'inc/live-editor.php';
