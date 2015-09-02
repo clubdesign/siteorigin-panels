@@ -121,9 +121,6 @@ class SiteOrigin_Panels_Live_Editor {
 			}
 		}
 
-		var_dump($value);
-		die();
-
 		return $value;
 	}
 
